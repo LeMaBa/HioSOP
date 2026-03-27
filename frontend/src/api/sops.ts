@@ -1,12 +1,13 @@
 import { apiClient } from "./client";
 
-export type SOPCategory = "BRAND" | "THL" | "GEFAHRGUT" | "MANV" | "WASSER" | "ALLGEMEIN";
+export type SOPCategory = string;
 export type SOPStatus = "DRAFT" | "IN_REVIEW" | "ACTIVE" | "ARCHIVED";
 
 export interface ChecklistItem {
   id: string;
   text: string;
   order: number;
+  required: boolean;
   sub_items: ChecklistItem[];
 }
 
@@ -24,10 +25,12 @@ export interface SOPVersion {
   created_at: string;
   updated_at: string;
   submitted_at: string | null;
+  submitted_by: string | null;
   reviewed_at: string | null;
-  released_at: string | null;
   reviewed_by: string | null;
   review_comment: string | null;
+  released_at: string | null;
+  released_by: string | null;
   next_review_date: string | null;
 }
 
@@ -38,6 +41,7 @@ export interface SOPListItem {
   category: SOPCategory;
   status: SOPStatus | null;
   version_number: string | null;
+  tags: string[];
   created_at: string;
   released_at: string | null;
   is_favorite: boolean;
@@ -52,6 +56,8 @@ export interface SOPResponse {
   created_at: string;
   active_version_id: string | null;
   current_version: SOPVersion | null;
+  pending_version: SOPVersion | null;
+  is_favorite: boolean;
 }
 
 export interface SOPCreate {
@@ -72,6 +78,7 @@ export interface SOPUpdate {
   linked_sop_codes?: string[];
   tags?: string[];
   change_comment?: string;
+  next_review_date?: string;
 }
 
 export interface FeedbackCreate {
@@ -80,7 +87,7 @@ export interface FeedbackCreate {
 }
 
 export const sopsApi = {
-  list: (params?: { q?: string; category?: string }) =>
+  list: (params?: { q?: string; category?: string; tag?: string }) =>
     apiClient.get<SOPListItem[]>("/sops", { params }).then((r) => r.data),
 
   get: (id: string) => apiClient.get<SOPResponse>(`/sops/${id}`).then((r) => r.data),
@@ -107,7 +114,12 @@ export const sopsApi = {
     }).then((r) => r.data);
   },
 
+  delete: (id: string) => apiClient.delete(`/sops/${id}`),
+
   toggleFavorite: (id: string) => apiClient.post(`/sops/${id}/favorite`),
+
+  exportPdf: (params?: { category?: string; ids?: string }) =>
+    apiClient.get("/sops/export", { params, responseType: "blob" }).then((r) => r.data as Blob),
 
   submitFeedback: (id: string, data: FeedbackCreate) =>
     apiClient.post(`/sops/${id}/feedback`, data).then((r) => r.data),

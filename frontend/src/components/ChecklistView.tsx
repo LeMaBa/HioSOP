@@ -15,7 +15,7 @@ export default function ChecklistView({ items }: Props) {
 
   if (items.length === 0) {
     return (
-      <p className="text-gray-500 italic text-sm">
+      <p className="text-gray-500 dark:text-gray-400 italic text-sm">
         Keine Checklisten-Einträge vorhanden.
       </p>
     );
@@ -28,13 +28,13 @@ export default function ChecklistView({ items }: Props) {
     <div>
       {/* Progress bar */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex-1 bg-gray-200 rounded-full h-2">
+        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-primary-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }}
           />
         </div>
-        <span className="text-sm text-gray-500 tabular-nums">
+        <span className="text-sm text-gray-500 dark:text-gray-400 tabular-nums">
           {completed}/{total}
         </span>
       </div>
@@ -51,7 +51,7 @@ export default function ChecklistView({ items }: Props) {
         ))}
       </ol>
 
-      <p className="mt-4 text-xs text-gray-400">
+      <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
         Checkboxen werden beim Verlassen der SOP zurückgesetzt und nicht gespeichert.
       </p>
     </div>
@@ -80,15 +80,15 @@ function ChecklistItemRow({
           type="checkbox"
           checked={isChecked}
           onChange={() => toggle(item.id)}
-          className="mt-0.5 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+          className="mt-0.5 h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 flex-shrink-0"
         />
         <span
           className={clsx(
             "text-sm leading-relaxed",
-            isChecked ? "line-through text-gray-400" : "text-gray-800"
+            isChecked ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-200"
           )}
         >
-          <span className="font-mono text-gray-400 mr-1 text-xs">{index}.</span>
+          <span className="font-mono text-gray-400 dark:text-gray-500 mr-1 text-xs">{index}.</span>
           {item.text}
         </span>
       </label>

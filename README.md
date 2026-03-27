@@ -114,6 +114,33 @@ DRAFT → IN_REVIEW → ACTIVE → ARCHIVED
 
 Editing an `ACTIVE` SOP creates a new `DRAFT` with an incremented minor version (e.g. `1.0` → `1.1`).
 
+## draw.io Diagrams
+
+### Uploading a diagram
+
+In the SOP detail view (Admin role), click **Bearbeiten** and upload a `.drawio` file. The diagram is rendered inline via an iframe viewer.
+
+### Linking to other SOPs from a diagram
+
+You can add clickable links inside a diagram that navigate directly to another SOP within the app.
+
+**In draw.io:**
+
+1. Select the shape you want to make a link.
+2. Right-click → **Edit Link** (or press `Ctrl+K`).
+3. Enter the link as a relative path: `/sop/SOP-002` (replace `SOP-002` with the exact code of the target SOP).
+4. Set the link to open **in this window** (not a new tab).
+
+**Rules:**
+- The path must start with `/sop/` — the app intercepts these links and uses in-app navigation instead of opening a browser URL.
+- The SOP code is **case-sensitive** and must match exactly (e.g. `/sop/NAW-01`, not `/sop/naw-01`).
+- Links to external URLs open normally in a new tab.
+
+**Example XML** (inside the `.drawio` file):
+```xml
+<mxCell href="/sop/NAW-01" ... />
+```
+
 ## LDAP (optional)
 
 Set `LDAP_SERVER` in `.env` to enable LDAP authentication. On first login, an LDAP user gets a local shadow account created automatically. If `LDAP_SERVER` is unset, only local users are active.

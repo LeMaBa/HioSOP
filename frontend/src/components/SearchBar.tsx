@@ -76,25 +76,25 @@ export default function SearchBar() {
       </div>
 
       {open && results && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto z-50">
           {results.slice(0, 10).map((sop) => (
             <button
               key={sop.id}
-              className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-0"
+              className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
               onClick={() => handleSelect(sop.code)}
             >
-              <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
                 {sop.code}
               </span>
-              <span className="text-sm text-gray-800 flex-1 truncate">{sop.title}</span>
-              <span className="text-xs text-gray-400">{categoryLabel(sop.category)}</span>
+              <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">{sop.title}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{categoryLabel(sop.category)}</span>
             </button>
           ))}
         </div>
       )}
 
       {open && query.length >= 2 && results?.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 z-50">
           Keine SOPs gefunden
         </div>
       )}

@@ -9,10 +9,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icons/*.png"],
       manifest: {
-        name: "SOP-Navigator",
+        name: "Malteser SOP-Navigator",
         short_name: "SOP-Nav",
-        description: "Standard Operating Procedures für die Feuerwehrleitstelle",
-        theme_color: "#1d4ed8",
+        description: "Standard Operating Procedures – Malteser Hilfsdienst",
+        theme_color: "#b80015",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "any",

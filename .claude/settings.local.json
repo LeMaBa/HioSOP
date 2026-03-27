@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx tsc:*)",
+      "Bash(docker compose:*)"
+    ]
+  }
+}

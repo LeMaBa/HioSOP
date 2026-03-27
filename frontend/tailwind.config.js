@@ -1,20 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
+        // Malteser Corporate Identity — Red #E2001A
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+          50:  "#fff0f1",
+          100: "#ffdde0",
+          200: "#ffb3b9",
+          300: "#ff8089",
+          400: "#ff4d5a",
+          500: "#ff1a2b",
+          600: "#e2001a",  // Malteser Red
+          700: "#b80015",
+          800: "#8f0010",
+          900: "#66000b",
         },
       },
     },

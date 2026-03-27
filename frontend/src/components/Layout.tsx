@@ -1,25 +1,68 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
-  BookOpen, Star, Settings, Users, LogOut, Wifi, WifiOff, ChevronRight
+  BookOpen, Star, Settings, Users, LogOut, Wifi, WifiOff,
+  ChevronDown, ChevronRight, Moon, Sun, ScrollText,
 } from "lucide-react";
 import { useAuthStore, isAdmin, isOwner } from "../store/auth";
 import { useQuery } from "@tanstack/react-query";
 import { sopsApi } from "../api/sops";
+import { categoriesApi } from "../api/categories";
 import SearchBar from "./SearchBar";
 import clsx from "clsx";
+
+function useDarkMode() {
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+  return { dark, toggle };
+}
 
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { dark, toggle: toggleDark } = useDarkMode();
 
-  const { data: favorites } = useQuery({
-    queryKey: ["sops", "favorites"],
+  const { data: allSops } = useQuery({
+    queryKey: ["sops"],
     queryFn: () => sopsApi.list(),
-    select: (data) => data.filter((s) => s.is_favorite),
   });
+
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: categoriesApi.list,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const favorites = allSops?.filter((s) => s.is_favorite);
+
+  const sopsByCategory = (() => {
+    if (!allSops || !categories) return [];
+    const grouped = new Map<string, typeof allSops>();
+    for (const sop of allSops) {
+      if (!grouped.has(sop.category)) grouped.set(sop.category, []);
+      grouped.get(sop.category)!.push(sop);
+    }
+    return categories
+      .filter((c) => grouped.has(c.key))
+      .map((c) => ({ category: c, sops: grouped.get(c.key)! }));
+  })();
+
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+  const toggleCat = (key: string) =>
+    setCollapsedCats((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   useEffect(() => {
     const on = () => setIsOnline(true);
@@ -38,7 +81,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Offline Banner */}
       {!isOnline && (
         <div className="bg-amber-500 text-white text-sm text-center py-1.5 flex items-center justify-center gap-2">
@@ -47,7 +90,7 @@ export default function Layout() {
         </div>
       )}
 
-      {/* Top Bar */}
+      {/* Top Bar — Malteser Red */}
       <header className="bg-primary-700 text-white shadow-md flex-shrink-0">
         <div className="flex items-center h-14 px-4 gap-3">
           {/* Mobile menu toggle */}
@@ -60,15 +103,29 @@ export default function Layout() {
             </svg>
           </button>
 
-          <span className="font-bold text-lg tracking-tight whitespace-nowrap">SOP-Navigator</span>
+          {/* Wordmark */}
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <span className="font-extrabold text-lg tracking-tight">Malteser</span>
+            <span className="hidden sm:inline text-primary-300 font-light text-lg">SOP-Navigator</span>
+          </div>
 
           <div className="flex-1 mx-4">
             <SearchBar />
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-primary-200 whitespace-nowrap">
-            {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-            <span className="hidden sm:inline">{user?.full_name}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-primary-200 whitespace-nowrap flex items-center gap-2">
+              {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+              <span className="hidden sm:inline">{user?.full_name}</span>
+            </div>
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              title={dark ? "Heller Modus" : "Dunkler Modus"}
+              className="p-1.5 rounded-lg text-primary-200 hover:text-white hover:bg-primary-600 transition-colors"
+            >
+              {dark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
         </div>
       </header>
@@ -86,60 +143,81 @@ export default function Layout() {
         <aside
           className={clsx(
             "fixed md:static inset-y-0 left-0 z-30 md:z-auto",
-            "w-64 bg-white border-r border-gray-200 flex flex-col",
+            "w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col",
             "transform transition-transform duration-200 md:translate-x-0",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
             "md:flex"
           )}
         >
-          <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-            <SidebarLink to="/" icon={<BookOpen size={18} />} label="SOP-Bibliothek" onClick={() => setSidebarOpen(false)} />
+          <nav className="flex-1 overflow-y-auto py-3 px-2">
+            <SidebarLink to="/" icon={<BookOpen size={16} />} label="SOP-Bibliothek" onClick={() => setSidebarOpen(false)} />
 
+            {/* Favorites */}
             {favorites && favorites.length > 0 && (
-              <div className="pt-4">
-                <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              <div className="mt-4">
+                <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
                   Favoriten
                 </p>
                 {favorites.map((sop) => (
-                  <NavLink
-                    key={sop.id}
-                    to={`/sop/${sop.code}`}
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      clsx(
-                        "flex items-center gap-2 px-3 py-1.5 rounded text-sm truncate",
-                        isActive
-                          ? "bg-primary-50 text-primary-700 font-medium"
-                          : "text-gray-600 hover:bg-gray-100"
-                      )
-                    }
-                  >
-                    <Star size={14} className="text-amber-400 flex-shrink-0" />
-                    <span className="truncate">{sop.code} – {sop.title}</span>
-                  </NavLink>
+                  <SopLink key={sop.id} sop={sop} onNavigate={() => setSidebarOpen(false)}>
+                    <Star size={12} className="text-amber-400 flex-shrink-0" />
+                  </SopLink>
                 ))}
               </div>
             )}
 
-            {isAdmin(user) && (
-              <div className="pt-4">
-                <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                  Verwaltung
+            {/* SOP Table of Contents grouped by category */}
+            {sopsByCategory.length > 0 && (
+              <div className="mt-4">
+                <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                  Inhaltsverzeichnis
                 </p>
-                <SidebarLink to="/admin" icon={<Settings size={18} />} label="SOP-Verwaltung" onClick={() => setSidebarOpen(false)} />
-                {isOwner(user) && (
-                  <SidebarLink to="/users" icon={<Users size={18} />} label="Benutzerverwaltung" onClick={() => setSidebarOpen(false)} />
-                )}
+                {sopsByCategory.map(({ category, sops }) => {
+                  const collapsed = collapsedCats.has(category.key);
+                  return (
+                    <div key={category.key}>
+                      <button
+                        onClick={() => toggleCat(category.key)}
+                        className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded transition-colors"
+                      >
+                        <span className="uppercase tracking-wide">{category.label}</span>
+                        {collapsed
+                          ? <ChevronRight size={12} />
+                          : <ChevronDown size={12} />
+                        }
+                      </button>
+                      {!collapsed && sops.map((sop) => (
+                        <SopLink key={sop.id} sop={sop} onNavigate={() => setSidebarOpen(false)} />
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </nav>
 
-          <div className="border-t border-gray-200 p-3">
-            <div className="text-xs text-gray-500 mb-1 truncate">{user?.email}</div>
-            <div className="text-xs text-gray-400 mb-2">{roleLabel(user?.role)}</div>
+          {/* Bottom nav — changelog + admin, always pinned above user footer */}
+          <div className="px-2 pb-2 border-t border-gray-200 dark:border-gray-700 pt-2">
+            <SidebarLink to="/changelog" icon={<ScrollText size={16} />} label="Änderungsprotokoll" onClick={() => setSidebarOpen(false)} />
+            {isAdmin(user) && (
+              <div className="mt-2">
+                <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                  Verwaltung
+                </p>
+                <SidebarLink to="/admin" icon={<Settings size={16} />} label="SOP-Verwaltung" onClick={() => setSidebarOpen(false)} />
+                {isOwner(user) && (
+                  <SidebarLink to="/users" icon={<Users size={16} />} label="Benutzerverwaltung" onClick={() => setSidebarOpen(false)} />
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">{user?.email}</div>
+            <div className="text-xs text-gray-400 dark:text-gray-500 mb-2">{roleLabel(user?.role)}</div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 w-full"
+              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 w-full"
             >
               <LogOut size={16} />
               Abmelden
@@ -173,13 +251,40 @@ function SidebarLink({
         clsx(
           "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium",
           isActive
-            ? "bg-primary-50 text-primary-700"
-            : "text-gray-700 hover:bg-gray-100"
+            ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
         )
       }
     >
       {icon}
       {label}
+    </NavLink>
+  );
+}
+
+function SopLink({
+  sop, onNavigate, children,
+}: {
+  sop: { id: string; code: string; title: string };
+  onNavigate: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <NavLink
+      to={`/sop/${sop.code}`}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        clsx(
+          "flex items-center gap-2 px-3 py-1 rounded text-sm truncate",
+          isActive
+            ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium"
+            : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+        )
+      }
+    >
+      {children}
+      <span className="font-mono text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{sop.code}</span>
+      <span className="truncate">{sop.title}</span>
     </NavLink>
   );
 }

@@ -6,6 +6,7 @@ import LibraryPage from "./pages/LibraryPage";
 import SOPDetailPage from "./pages/SOPDetailPage";
 import AdminPage from "./pages/AdminPage";
 import UsersPage from "./pages/UsersPage";
+import ChangelogPage from "./pages/ChangelogPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="sop/:id" element={<SOPDetailPage />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="changelog" element={<ChangelogPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

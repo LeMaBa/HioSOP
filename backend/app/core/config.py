@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://sopuser:changeme@db:5432/sopnavigator"
     REDIS_URL: str = "redis://redis:6379/0"
 
+    CORS_ORIGINS: str = "http://localhost:3000"
+
     # LDAP (optional)
     LDAP_SERVER: Optional[str] = None
     LDAP_PORT: int = 389
