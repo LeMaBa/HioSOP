@@ -19,7 +19,6 @@ import clsx from "clsx";
 
 type Tab = "diagram" | "checklist" | "versions";
 
-function makeId() { return Math.random().toString(36).slice(2); }
 
 export default function SOPDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -75,7 +74,8 @@ export default function SOPDetailPage() {
     enabled: !!id,
   });
 
-  const { data: versions } = useQuery({
+  // Prefetch versions when the tab is open — VersionHistory has its own query
+  useQuery({
     queryKey: ["sop-versions", id],
     queryFn: () => sopsApi.versions(id!),
     enabled: !!id && tab === "versions",
@@ -207,57 +207,46 @@ export default function SOPDetailPage() {
       <Breadcrumb crumbs={[{ label: sop.code + " – " + sop.title }]} />
 
       {/* ── Header card ─────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap gap-2 mb-2">
-              <span className="font-mono text-sm font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
-                {sop.code}
-              </span>
-              <CategoryBadge category={sop.category} />
-              {status && <StatusBadge status={status} />}
-              {version && (
-                <span className="text-xs text-gray-400 dark:text-gray-500 self-center">v{version.version_number}</span>
-              )}
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{sop.title}</h1>
-            {version?.released_at && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                Freigegeben: {new Date(version.released_at).toLocaleDateString("de-DE")}
-                {version.next_review_date && (
-                  <span className="ml-3">
-                    · Nächste Prüfung: {new Date(version.next_review_date).toLocaleDateString("de-DE")}
-                  </span>
-                )}
-              </p>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* Left: badges + title on one line */}
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="font-mono text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded flex-shrink-0">
+              {sop.code}
+            </span>
+            <CategoryBadge category={sop.category} />
+            {status && <StatusBadge status={status} />}
+            {version && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">v{version.version_number}</span>
             )}
+            <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{sop.title}</h1>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Right: action buttons */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               onClick={() => favoriteMutation.mutate()}
               title={isFav ? "Aus Favoriten entfernen" : "Zu Favoriten hinzufügen"}
-              className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <Star size={16} className={isFav ? "text-amber-400 fill-amber-400" : "text-gray-400"} />
+              <Star size={14} className={isFav ? "text-amber-400 fill-amber-400" : "text-gray-400"} />
             </button>
 
             <button
               onClick={() => setShowFeedback((v) => !v)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="Feedback geben"
+              className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <ThumbsUp size={14} />
-              Feedback
             </button>
 
-            {/* Edit button */}
             {canEdit && !editing && (
               <button
                 onClick={enterEdit}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                title="Bearbeiten"
+                className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Pencil size={14} />
-                Bearbeiten
               </button>
             )}
 
@@ -265,10 +254,10 @@ export default function SOPDetailPage() {
               <button
                 onClick={() => submitMutation.mutate()}
                 disabled={submitMutation.isPending}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-60"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-60"
               >
-                <Send size={14} />
-                Zur Freigabe einreichen
+                <Send size={12} />
+                Einreichen
               </button>
             )}
 
@@ -277,16 +266,16 @@ export default function SOPDetailPage() {
                 <button
                   onClick={() => reviewMutation.mutate({ action: "approve" })}
                   disabled={reviewMutation.isPending}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-60"
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-60"
                 >
-                  <CheckCheck size={14} />
+                  <CheckCheck size={12} />
                   Freigeben
                 </button>
                 <button
                   onClick={() => setShowRejectModal(true)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg"
                 >
-                  <XCircle size={14} />
+                  <XCircle size={12} />
                   Ablehnen
                 </button>
               </>
@@ -295,10 +284,10 @@ export default function SOPDetailPage() {
             {isOwner(user) && status === "ACTIVE" && (
               <button
                 onClick={() => { if (confirm("SOP wirklich archivieren?")) archiveMutation.mutate(); }}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                title="Archivieren"
+                className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Archive size={14} />
-                Archivieren
               </button>
             )}
 
@@ -309,10 +298,10 @@ export default function SOPDetailPage() {
                     deleteMutation.mutate();
                 }}
                 disabled={deleteMutation.isPending}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-60"
+                title="Löschen"
+                className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60"
               >
                 <Trash2 size={14} />
-                Löschen
               </button>
             )}
           </div>

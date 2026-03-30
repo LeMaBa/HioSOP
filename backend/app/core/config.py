@@ -12,6 +12,15 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000"
 
+    # Resend email (optional — leave empty to disable email sending)
+    RESEND_API_KEY: Optional[str] = None
+    RESEND_FROM: str = "SOP-Navigator <onboarding@resend.dev>"
+    APP_BASE_URL: str = "http://localhost:3000"
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.RESEND_API_KEY)
+
     # LDAP (optional)
     LDAP_SERVER: Optional[str] = None
     LDAP_PORT: int = 389
